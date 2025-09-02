@@ -11,6 +11,7 @@ add_executable(rgm
     src/blockchain.cpp
     src/wallet.cpp
     src/transaction.cpp
+    src/crypto.cpp
 )
 
 target_link_libraries(rgm OpenSSL::Crypto)

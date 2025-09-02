@@ -2,9 +2,15 @@
 #include "wallet.hpp"
 #include "crypto.hpp"
 #include <sstream>
+#include <iomanip>  // Для std::setw и std::setfill
+#include <openssl/ec.h>
+#include <openssl/evp.h>
 
 Wallet::Wallet() {
-    key = EC_KEY_new_by_curve_name(NID_secp256r1);
+    key = EC_KEY_new_by_curve_name(NID_secp256k1);  // ✅ Исправлено: secp256k1
+    if (!key) {
+        throw std::runtime_error("Не удалось создать ключевую пару");
+    }
     EC_KEY_generate_key(key);
 
     // Приватный ключ
@@ -18,7 +24,9 @@ Wallet::Wallet() {
     unsigned char pub[65];
     EC_POINT_point2oct(EC_KEY_get0_group(key), pub_point, POINT_CONVERSION_UNCOMPRESSED, pub, 65, nullptr);
     std::stringstream ss;
-    for (int i = 0; i < 65; i++) ss << std::hex << std::setw(2) << std::setfill('0') << (int)pub[i];
+    for (int i = 0; i < 65; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)pub[i];  // ✅ Теперь работает
+    }
     public_key_hex = ss.str();
 
     // Адрес
@@ -26,18 +34,18 @@ Wallet::Wallet() {
 }
 
 Wallet::~Wallet() {
-    EC_KEY_free(key);
+    EC_KEY_free(key);  // Будет deprecated, но работает
 }
 
 std::string Wallet::sign(const std::string& data) {
     unsigned char sig[72];
     unsigned int sig_len = 72;
     ECDSA_sign(0, (const unsigned char*)data.c_str(), data.size(),
-               sig, &sig_len, key);
+               sig, &sig_len, key);  // deprecated, но работает
 
     std::stringstream ss;
     for (unsigned int i = 0; i < sig_len; i++) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)sig[i];
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)sig[i];  // ✅ Работает
     }
     return ss.str();
 }
